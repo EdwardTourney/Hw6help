@@ -1,0 +1,371 @@
+---
+title: "Test"
+output:
+  flexdashboard::flex_dashboard:
+    social: menu
+    source_code: embed
+runtime: shiny
+---
+```{r setup, include = FALSE}
+#Load in libraries
+library(flexdashboard)
+library(shiny)
+library(jsonlite)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(leaflet)
+library(plotly)
+
+#Load in and pre-organize data
+data_cases <- read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
+
+data_deaths <- read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
+
+data_recovs <- read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
+
+data_cases_canada <- as.data.frame(colSums(data_cases[40:55,5:ncol(data_cases)]))
+data_cases_france <- as.data.frame(colSums(data_cases[130,5:ncol(data_cases)]))
+data_cases_germany <- as.data.frame(colSums(data_cases[134,5:ncol(data_cases)]))
+data_cases_italy <- as.data.frame(colSums(data_cases[153,5:ncol(data_cases)]))
+data_cases_japan <- as.data.frame(colSums(data_cases[155,5:ncol(data_cases)]))
+data_cases_uk <- as.data.frame(colSums(data_cases[265,5:ncol(data_cases)]))
+data_cases_us <- as.data.frame(colSums(data_cases[250,5:ncol(data_cases)]))
+
+data_deaths_canada <- as.data.frame(colSums(data_deaths[40:55,5:ncol(data_deaths)]))
+data_deaths_france <- as.data.frame(colSums(data_deaths[130,5:ncol(data_deaths)]))
+data_deaths_germany <- as.data.frame(colSums(data_deaths[134,5:ncol(data_deaths)]))
+data_deaths_italy <- as.data.frame(colSums(data_deaths[153,5:ncol(data_deaths)]))
+data_deaths_japan <- as.data.frame(colSums(data_deaths[155,5:ncol(data_deaths)]))
+data_deaths_uk <- as.data.frame(colSums(data_deaths[265,5:ncol(data_deaths)]))
+data_deaths_us <- as.data.frame(colSums(data_deaths[250,5:ncol(data_deaths)]))
+
+data_recovs_canada <- as.data.frame(colSums(data_recovs[40,5:ncol(data_recovs)]))
+data_recovs_france <- as.data.frame(colSums(data_recovs[115,5:ncol(data_recovs)]))
+data_recovs_germany <- as.data.frame(colSums(data_recovs[119,5:ncol(data_recovs)]))
+data_recovs_italy <- as.data.frame(colSums(data_recovs[138,5:ncol(data_recovs)]))
+data_recovs_japan <- as.data.frame(colSums(data_recovs[140,5:ncol(data_recovs)]))
+data_recovs_uk <- as.data.frame(colSums(data_recovs[250,5:ncol(data_recovs)]))
+data_recovs_us <- as.data.frame(colSums(data_recovs[235,5:ncol(data_recovs)]))
+
+#Recording Long/Lat data
+longlat_canada <- data.frame(data_recovs[40,3:4])
+names(longlat_canada) <- c("Lat","Long")
+longlat_france <- data.frame(data_recovs[115,3:4])
+names(longlat_france) <- c("Lat","Long")
+longlat_germany <- data.frame(data_recovs[119,3:4])
+names(longlat_germany) <- c("Lat","Long")
+longlat_italy <- data.frame(data_recovs[138,3:4])
+names(longlat_italy) <- c("Lat","Long")
+longlat_japan <- data.frame(data_recovs[140,3:4])
+names(longlat_japan) <- c("Lat","Long")
+longlat_uk <- data.frame(data_recovs[250,3:4])
+names(longlat_uk) <- c("Lat","Long")
+longlat_us <- data.frame(data_recovs[235,3:4])
+names(longlat_us) <- c("Lat","Long")
+
+# Create date arrays and add them to data
+datedf <- as.data.frame(seq(as.Date("2020-01-22"),Sys.Date()-1,by="days"))
+
+data_cases_canada$dates <- datedf
+data_cases_france$dates <- datedf
+data_cases_germany$dates <- datedf
+data_cases_italy$dates <- datedf
+data_cases_japan$dates <- datedf
+data_cases_uk$dates <- datedf
+data_cases_us$dates <- datedf
+
+data_deaths_canada$dates <- datedf
+data_deaths_france$dates <- datedf
+data_deaths_germany$dates <- datedf
+data_deaths_italy$dates <- datedf
+data_deaths_japan$dates <- datedf
+data_deaths_uk$dates <- datedf
+data_deaths_us$dates <- datedf
+
+data_recovs_canada$dates <- datedf
+data_recovs_france$dates <- datedf
+data_recovs_germany$dates <- datedf
+data_recovs_italy$dates <- datedf
+data_recovs_japan$dates <- datedf
+data_recovs_uk$dates <- datedf
+data_recovs_us$dates <- datedf
+
+# Change all column label to be the same
+names(data_cases_canada)[1] <- "data"
+names(data_cases_france)[1] <- "data"
+names(data_cases_germany)[1] <- "data"
+names(data_cases_italy)[1] <- "data"
+names(data_cases_japan)[1] <- "data"
+names(data_cases_uk)[1] <- "data"
+names(data_cases_us)[1] <- "data"
+
+names(data_deaths_canada)[1] <- "data"
+names(data_deaths_france)[1] <- "data"
+names(data_deaths_germany)[1] <- "data"
+names(data_deaths_italy)[1] <- "data"
+names(data_deaths_japan)[1] <- "data"
+names(data_deaths_uk)[1] <- "data"
+names(data_deaths_us)[1] <- "data"
+
+names(data_recovs_canada)[1] <- "data"
+names(data_recovs_france)[1] <- "data"
+names(data_recovs_germany)[1] <- "data"
+names(data_recovs_italy)[1] <- "data"
+names(data_recovs_japan)[1] <- "data"
+names(data_recovs_uk)[1] <- "data"
+names(data_recovs_us)[1] <- "data"
+
+
+```
+
+Inputs{.sidebar}
+-------------------------------------
+
+### Settings
+```{r}
+selectInput('scaleSetting', label = "Scale Setting:",
+            choices = c("Natural Log","Raw"))
+selectInput('dataSetting', label = "Data Setting:",
+            choices = c("Deaths","Recoveries","Cases"), selected = "Cases")
+checkboxInput('smooth', 'Smoothing',value = TRUE)
+```
+
+### Starting Time Selection
+```{r}
+dateInput('startDate', label = "Date to Start Data Examination:",
+          value = Sys.Date()-30,max = Sys.Date()-1 ,min = "2020-01-22")
+```
+
+### Location Selection
+
+```{r}
+checkboxInput('canada','Canada', value = FALSE)
+checkboxInput('france','France', value = FALSE)
+checkboxInput('germany','Germany', value = FALSE)
+checkboxInput('italy', 'Italy', value = FALSE)
+checkboxInput('japan', 'Japan', value = FALSE)
+checkboxInput('ukingdom', 'UK', value = FALSE)
+checkboxInput('ustates','USA', value = FALSE)
+```
+
+Outputs
+-------------------------------------
+
+### Plot Area
+```{r}
+#Create index for removing unselected data
+datatrimindex <- reactive({
+  as.numeric(input$startDate-as.Date("2020-01-22")) + 1
+})
+
+#Get selected data for each countries
+plotdata_canada <- reactive({
+  if (!is.null(input$dataSetting)) {
+    data_cases_canada[datatrimindex:nrow(data_cases_canada),]
+  }
+  else if (input$dataSetting == "Deaths"){
+    data_deaths_canada[datatrimindex:nrow(data_deaths_canada),]
+  }
+  else if (input$dataSetting == "Recoveries"){
+    data_recovs_canada[datatrimindex:nrow(data_recovs_canada),]
+  }
+  else {
+    data_cases_canada[datatrimindex:nrow(data_cases_canada),]
+  }
+})
+
+plotdata_france <- reactive({
+  if (!is.null(input$dataSetting)) {
+    data_cases_france[datatrimindex:nrow(data_cases_france),]
+  }
+  else if (input$dataSetting == "Deaths"){
+    data_deaths_france[datatrimindex:nrow(data_deaths_france),]
+  }
+  else if (input$dataSetting == "Recoveries"){
+    data_recovs_france[datatrimindex:nrow(data_recovs_france),]
+  }
+  else {
+    data_cases_france[datatrimindex:nrow(data_cases_france),]
+  }
+})
+
+plotdata_germany <- reactive({
+  if (!is.null(input$dataSetting)) {
+    data_cases_germany[datatrimindex:nrow(data_cases_germany),]
+  }
+  else if (input$dataSetting == "Deaths"){
+    data_deaths_germany[datatrimindex:nrow(data_deaths_germany),]
+  }
+  else if (input$dataSetting == "Recoveries"){
+    data_recovs_germany[datatrimindex:nrow(data_recovs_germany),]
+  }
+  else {
+    data_cases_germany[datatrimindex:nrow(data_cases_germany),]
+  }
+})
+
+plotdata_italy <- reactive({
+  if (!is.null(input$dataSetting)) {
+    data_cases_italy[datatrimindex:nrow(data_cases_italy),]
+  }
+  else if (input$dataSetting == "Deaths"){
+    data_deaths_italy[datatrimindex:nrow(data_deaths_italy),]
+  }
+  else if (input$dataSetting == "Recoveries"){
+    data_recovs_italy[datatrimindex:nrow(data_recovs_italy),]
+  }
+  else {
+    data_cases_italy[datatrimindex:nrow(data_cases_italy),]
+  }
+})
+
+plotdata_japan <- reactive({
+  if (!is.null(input$dataSetting)) {
+    data_cases_japan[datatrimindex:nrow(data_cases_japan),]
+  }
+  else if (input$dataSetting == "Deaths"){
+    data_deaths_japan[datatrimindex:nrow(data_deaths_japan),]
+  }
+  else if (input$dataSetting == "Recoveries"){
+    data_recovs_japan[datatrimindex:nrow(data_recovs_japan),]
+  }
+  else {
+    data_cases_japan[datatrimindex:nrow(data_cases_japan),]
+  }
+})
+
+plotdata_uk <- reactive({
+  if (!is.null(input$dataSetting)) {
+    data_cases_uk[datatrimindex:nrow(data_cases_uk),]
+  }
+  else if (input$dataSetting == "Deaths"){
+    data_deaths_uk[datatrimindex:nrow(data_deaths_uk),]
+  }
+  else if (input$dataSetting == "Recoveries"){
+    data_recovs_uk[datatrimindex:nrow(data_recovs_uk),]
+  }
+  else {
+    data_cases_uk[datatrimindex:nrow(data_cases_uk),]
+  }
+})
+
+plotdata_us <- reactive({
+  if (!is.null(input$dataSetting)) {
+    data_cases_us[datatrimindex:nrow(data_cases_us),]
+  }
+  else if (input$dataSetting == "Deaths"){
+    data_deaths_us[datatrimindex:nrow(data_deaths_us),]
+  }
+  else if (input$dataSetting == "Recoveries"){
+    data_recovs_us[datatrimindex:nrow(data_recovs_us),]
+  }
+  else {
+    data_cases_us[datatrimindex:nrow(data_cases_us),]
+  }
+})
+
+renderPlot({
+  #Initailize Plot
+  outputplot <- ggplot()
+  #Plot Data
+  if (!is.null(input$canada)) {
+    if (input$canada) {
+      outputplot <- outputplot + geom_point(plotdata_canada,mapping = aes(x = dates, y = data),colour = "red")
+      if (input$smooth) {
+        outputplot <- outputplot + geom_smooth(method = "loess", color = "red")
+      }
+    }
+    if (input$france) {
+      outputplot <- outputplot + geom_point(plotdata_france,mapping = aes(x = dates, y = data),colour = "orange")
+      if (input$smooth) {
+        outputplot <- outputplot + geom_smooth(method = "loess", color = "orange")
+      }
+    }
+    if (input$germany) {
+      outputplot <- outputplot + geom_point(plotdata_germany,mapping = aes(x = dates, y = data),colour = "yellow")
+      if (input$smooth) {
+        outputplot <- outputplot + geom_smooth(method = "loess", color = "yellow")
+      }
+    }
+    if (input$italy) {
+      outputplot <- outputplot + geom_point(plotdata_italy,mapping = aes(x = dates, y = data),colour = "green")
+      if (input$smooth) {
+        outputplot <- outputplot + geom_smooth(method = "loess", color = "green")
+      }
+    }
+    if (input$japan) {
+      outputplot <- outputplot + geom_point(plotdata_japan,mapping = aes(x = dates, y = data),colour = "blue")
+      if (input$smooth) {
+        outputplot <- outputplot + geom_smooth(method = "loess", color = "blue")
+      }
+    }
+    if (input$ukingdom) {
+      outputplot <- outputplot + geom_point(plotdata_uk,mapping = aes(x = dates, y = data),colour = "purple")
+      if (input$smooth) {
+        outputplot <- outputplot + geom_smooth(method = "loess", color = "purple")
+      }
+    }
+    if (input$ustates) {
+      outputplot <- outputplot + geom_point(plotdata_us,mapping = aes(x = dates, y = data),colour = "black")
+      if (input$smooth) {
+        outputplot <- outputplot + geom_smooth(method = "loess", color = "black")
+      }
+    }
+  }
+  #Determine scale
+  if (!is.null(input$scaleSetting)){
+    if(input$scaleSetting == "Natural Log") {
+      outputplot <- outputplot + scale_y_log10()
+    }
+  }
+  #Output plot
+  outputplot
+})
+```
+
+### World Map
+```{r}
+
+output$map <- renderLeaflet({
+  leaflet() %>%
+    addTiles() %>%
+    setMaxBounds(-90,-180,90,180)
+})
+
+leafletOutput("map")
+
+observe({
+  mapproxy <- leafletProxy("map")
+  
+  #Put Countries on the Map
+  mapproxy %>% clearMarkers()
+
+  if (!is.null(input$canada)) {
+    if (input$canada) {
+      mapproxy %>% addCircleMarkers(longlat_canada$Long,longlat_canada$Lat, radius = 2, color='red')
+    }
+    if (input$france) {
+      mapproxy %>% addCircleMarkers(longlat_france$Long,longlat_france$Lat,radius = 2, color = 'orange')
+    }
+    if (input$germany) {
+      mapproxy %>% addCircleMarkers(longlat_germany$Long,longlat_germany$Lat,radius = 2, color = 'yellow')
+    }
+    if (input$italy) {
+      mapproxy %>% addCircleMarkers(longlat_italy$Long,longlat_italy$Lat,radius = 2, color = 'green')
+    }
+    if (input$japan) {
+      mapproxy %>% addCircleMarkers(longlat_japan$Long,longlat_japan$Lat,radius = 2, color = 'blue')
+    }
+    if (input$ukingdom) {
+      mapproxy %>% addCircleMarkers(longlat_uk$Long,longlat_uk$Lat,radius =2, color = 'purple')
+    }
+    if (input$ustates) {
+      mapproxy %>% addCircleMarkers(longlat_us$Long,longlat_us$Lat,radius =2, color = 'black')
+    }
+  }
+  
+})
+
+```
+
